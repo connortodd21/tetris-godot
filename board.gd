@@ -1,7 +1,7 @@
 extends TileMapLayer
 
-var shapes = [Piece_I, Piece_J, Piece_L, Piece_O, Piece_S, Piece_T, Piece_Z]
-var shapes_full := shapes.duplicate()
+var pieces = [Piece_I, Piece_J, Piece_L, Piece_O, Piece_S, Piece_T, Piece_Z]
+var pieces_full := pieces.duplicate()
 
 #grid variables
 const COLS : int = 10
@@ -31,18 +31,25 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	pass
 
-func start() -> void:
-	var shape_class = pick_shape_class()
-	var shape = shape_class.new()
-	get_parent().add_child(shape)
-	print(shape, shape.get_curr_vertices())
-	draw_piece(shape.get_curr_vertices(), Vector2i(5,1), Vector2i(1,0))
+func new_game() -> void:
+	var piece_class = pick_piece_class()
+	var piece = get_piece(piece_class)
+	piece_atlas = Vector2i(pieces_full.find(piece_class),0)
+	draw_piece(piece.get_curr_vertices(), Vector2i(5,1), piece_atlas)
 
-func pick_shape_class():
-	if shapes.is_empty():
-		shapes = shapes_full.duplicate()
-	shapes.shuffle()
-	return shapes.pop_front()
+
+func pick_piece_class():
+	if pieces.is_empty():
+		pieces = pieces_full.duplicate()
+	pieces.shuffle()
+	return pieces.pop_front()
+
+
+func get_piece(piece_class) -> PieceBase:
+	var piece = piece_class.new()
+	get_parent().add_child(piece)
+	return piece
+	
 
 func draw_piece(shape_vertices: Array[Vector2i], pos: Vector2i, atlas: Vector2i) -> void:
 	for i in shape_vertices:
