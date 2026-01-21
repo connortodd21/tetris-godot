@@ -21,11 +21,14 @@ var next_piece_type : PieceBase
 var rotation_index : int = 0
 var active_piece : PieceBase
 const next_piece_location = Vector2i(15,6)
+var stored_piece : PieceBase
+const stored_piece_location = Vector2i(-6,3)
 
 # tilemap variables
 var tile_id : int = 0
 var piece_atlas : Vector2i
 var next_piece_atlas : Vector2i
+var stored_piece_atlas : Vector2i
 const empty_atlas := Vector2i(-1,-1)
 
 # layer variables
@@ -55,6 +58,8 @@ func _process(delta: float) -> void:
 			steps[Vector2i.RIGHT] += 10
 		if Input.is_action_just_pressed("ui_up"):
 			rotate_piece()
+		if Input.is_action_just_pressed("c_key"):
+			store_piece()
 		
 		steps[Vector2i.DOWN] += (speed * (1 + delta))
 			
@@ -135,6 +140,28 @@ func get_default_piece_steps() -> Dictionary[Vector2i, float]:
 ########################################################
 ### Piece creation and helpers
 ########################################################
+func store_piece() -> void:
+	erase_piece($active_piece)
+	if stored_piece != null:
+		erase_stored_piece()
+		var temp_piece = stored_piece
+		var temp_atlas = stored_piece_atlas
+		stored_piece = active_piece
+		stored_piece_atlas = piece_atlas
+		active_piece = temp_piece
+		piece_atlas = temp_atlas
+	else:
+		stored_piece = active_piece
+		stored_piece_atlas = piece_atlas
+		active_piece = next_piece_type
+		piece_atlas = next_piece_atlas
+		erase_next_piece()
+		generate_next_piece()
+		
+	draw_piece(active_piece, current_pos, piece_atlas, $active_piece)
+	show_stored_piece()
+		
+
 func create_new_piece() -> void:
 	# reset piece steps
 	steps = get_default_piece_steps()
@@ -219,6 +246,12 @@ func show_next_piece() -> void:
 	
 func erase_next_piece() -> void:
 	$active_piece.erase_piece(next_piece_type.get_curr_vertices(), next_piece_location)
+	
+func show_stored_piece() -> void:
+	$active_piece.draw_piece(stored_piece.get_curr_vertices(), stored_piece_location, stored_piece_atlas)
+	
+func erase_stored_piece() -> void:
+	$active_piece.erase_piece(stored_piece.get_curr_vertices(), stored_piece_location)
 	
 func clear_board() -> void:
 	for i in range(ROWS):
