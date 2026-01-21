@@ -179,8 +179,11 @@ func generate_next_piece() -> void:
 #########################################################
 ### Scoring logic
 #########################################################
-func increment_score() -> void:
-	score += REWARD
+func increment_score(num_completed_rows: int) -> void:
+	if num_completed_rows >= 4:
+		score += (REWARD * num_completed_rows) + (100 * num_completed_rows)
+	else:
+		score += REWARD * num_completed_rows
 	set_score(score)
 	speed += ACCELERATION
 
@@ -207,12 +210,15 @@ func is_row_complete(row: int) -> bool:
 
 func check_for_completed_rows() -> void:
 	var row = ROWS
+	var num_completed_rows = 0
 	while row > 0:
 		if is_row_complete(row):
 			shift_rows(row)
-			increment_score()
+			num_completed_rows += 1
 		else:
 			row -= 1
+	if num_completed_rows > 0:
+		increment_score(num_completed_rows)
 
 func shift_rows(row: int) -> void:
 	for i in range(row, 1, -1):
