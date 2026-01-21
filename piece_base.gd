@@ -14,11 +14,17 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	pass
 
-func rotate(curr_angle: int) -> void:
-	angle = (curr_angle + 90) % 360
+func rotate() -> void:
+	angle = get_next_rotation()
+	
+func get_next_rotation() -> int:
+	return (angle + 90) % 360
 
 func set_vertices(vertices_angle: int, vertices: Array[Vector2i]) -> void:
 	angle_to_vertices[vertices_angle] = vertices
+	
+func get_vertices(vertices_angle: int) -> Array[Vector2i]:
+	return angle_to_vertices[vertices_angle]
 
 func get_curr_vertices() -> Array[Vector2i]:
 	if angle in angle_to_vertices.keys():
