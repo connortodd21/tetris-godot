@@ -158,6 +158,7 @@ func store_piece() -> void:
 		erase_next_piece()
 		generate_next_piece()
 		
+	stored_piece.angle = 0
 	draw_piece(active_piece, current_pos, piece_atlas, $active_piece)
 	show_stored_piece()
 		
