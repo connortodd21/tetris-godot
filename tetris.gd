@@ -3,7 +3,7 @@ extends Node2D
 var pieces = [Piece_I, Piece_J, Piece_L, Piece_O, Piece_S, Piece_T, Piece_Z]
 var pieces_full := pieces.duplicate()
 
-#grid variables
+# grid variables
 const COLS : int = 10
 const ROWS : int = 20
 
@@ -15,26 +15,29 @@ const steps_req : float = 50.0 # this needs to match FPS cap. TODO: replace with
 var speed : float
 const ACCELERATION := 0.25
 
-#game piece variables
+# game piece variables
 var piece_type : PieceBase
 var next_piece_type : PieceBase
 var rotation_index : int = 0
 var active_piece : PieceBase
 const next_piece_location = Vector2i(15,6)
 
-#tilemap variables
+# tilemap variables
 var tile_id : int = 0
 var piece_atlas : Vector2i
 var next_piece_atlas : Vector2i
 const empty_atlas := Vector2i(-1,-1)
 
-#layer variables
+# layer variables
 var board_layer : int = 0
 var active_layer : int = 1
 
-#game variables
+# score variables
 var score := 0
 const REWARD := 100
+
+# flag to see if game is running
+var game_running := false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -43,21 +46,22 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	if Input.is_action_pressed("ui_down"):
-		steps[Vector2i.DOWN] += 10
-	if Input.is_action_pressed("ui_left"):
-		steps[Vector2i.LEFT] += 10
-	if Input.is_action_pressed("ui_right"):
-		steps[Vector2i.RIGHT] += 10
-	if Input.is_action_just_pressed("ui_up"):
-		rotate_piece()
-	
-	steps[Vector2i.DOWN] += (speed * (1 + delta))
+	if game_running:
+		if Input.is_action_pressed("ui_down"):
+			steps[Vector2i.DOWN] += 10
+		if Input.is_action_pressed("ui_left"):
+			steps[Vector2i.LEFT] += 10
+		if Input.is_action_pressed("ui_right"):
+			steps[Vector2i.RIGHT] += 10
+		if Input.is_action_just_pressed("ui_up"):
+			rotate_piece()
 		
-	for direction in steps.keys():
-		if steps[direction] > steps_req:
-			move_piece(direction)
-			steps[direction] = 0
+		steps[Vector2i.DOWN] += (speed * (1 + delta))
+			
+		for direction in steps.keys():
+			if steps[direction] > steps_req:
+				move_piece(direction)
+				steps[direction] = 0
 
 func new_game() -> void:
 	score = 0
@@ -65,6 +69,7 @@ func new_game() -> void:
 	steps = get_default_piece_steps()
 	clear_board()
 	hide_game_over()
+	game_running = true
 	var piece_class = $active_piece.pick_piece_class()
 	piece_type = $active_piece.get_piece(piece_class)
 	piece_atlas = Vector2i(pieces_full.find(piece_class),0)
@@ -116,6 +121,9 @@ func move_piece(direction: Vector2i) -> void:
 		piece_atlas = next_piece_atlas
 		create_new_piece()
 		generate_next_piece()
+		if is_game_over():
+			handle_game_over()
+			
 
 func get_default_piece_steps() -> Dictionary[Vector2i, float]:
 	return {
@@ -153,6 +161,17 @@ func increment_score() -> void:
 #########################################################
 ### Game logic
 #########################################################
+func handle_game_over() -> void:
+	land_piece()
+	$HUD.get_node("GameOverLabel").show()
+	game_running = false
+
+func is_game_over() -> bool:
+	for cell in active_piece.get_curr_vertices():
+		if not is_cell_free(cell + current_pos):
+			return true
+	return false
+
 func is_row_complete(row: int) -> bool:
 	for i in range(COLS):
 		if is_cell_free(Vector2i(i+1, row)):
